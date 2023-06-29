@@ -25,17 +25,17 @@ python preprocess.py --input_dataset trifinger-cube-lift-real-expert-v0 --output
 ## Usege in Python
 
 ```python
-    old_env = gym.make(
-               args.input_dataset,
-               flatten_obs=True)
-    old_dataset = old_env.get_dataset(rng=(0,2))
-    print('Observation Shape', old_dataset['observations'][0].shape)
+old_env = gym.make(
+           args.input_dataset,
+           flatten_obs=True)
+old_dataset = old_env.get_dataset(rng=(0,2))
+print('Observation Shape', old_dataset['observations'][0].shape)
 
-    new_env = gym.make(
-               args.input_dataset,
-               flatten_obs=True,
-               data_dir=f'output_datasets/{args.output_dataset}')
+new_env = gym.make(
+           args.input_dataset,
+           flatten_obs=True,
+           data_dir=f'output_datasets/{args.output_dataset}')
 
-    new_dataset = new_env.get_dataset(rng=(0,2))
-    print('Observation Shape', new_dataset['observations'][0].shape)
+new_dataset = new_env.get_dataset(rng=(0,2))
+print('Observation Shape', new_dataset['observations'][0].shape)
 ```
