@@ -7,7 +7,7 @@ More detailed information about the simulated environment, the datasets and on h
 
 Some of the datasets were used during the [Real Robot Challenge 2022](https://real-robot-challenge.com).
 
-## Installation Requirements
+## Installation 
 
 ```bash
 cd trifinger_rl_datasets
@@ -16,19 +16,26 @@ pip install .
 cd ..
 ```
 
-## Preprocess Data
+## Preprocess 
 
 ```bash
 python preprocess.py --input_dataset trifinger-cube-lift-real-expert-v0 --output_dataset trifinger-cube-lift-real-expert-v0-masa
 ```
 
-## Usege 
+## Usege in Python
 
 ```python
+    old_env = gym.make(
+               args.input_dataset,
+               flatten_obs=True)
+    old_dataset = old_env.get_dataset(rng=(0,2))
+    print('Observation Shape', old_dataset['observations'][0].shape)
+
     new_env = gym.make(
                args.input_dataset,
                flatten_obs=True,
                data_dir=f'output_datasets/{args.output_dataset}')
+
     new_dataset = new_env.get_dataset(rng=(0,2))
     print('Observation Shape', new_dataset['observations'][0].shape)
 ```
