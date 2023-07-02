@@ -1,5 +1,6 @@
 
 import os 
+import shutil
 import numpy as np
 import torch
 import gymnasium as gym
@@ -125,7 +126,7 @@ def get_obs(observation):
 # n_timesteps, obs_size, action_size
 
 def main():
-    
+
     # 1. create args
     parser = ArgumentParser()
     parser.add_argument(
@@ -140,15 +141,16 @@ def main():
     )
     args = parser.parse_args()
 
-    # 2. create env
+    # 2. create env and load dataset
+    os.makedirs(f'output_datasets/{args.output_dataset}', exist_ok=True)
     env = gym.make(
             args.input_dataset,
+            data_dir=f'output_datasets/{args.output_dataset}',
             flatten_obs=False)
-
     # M: loading all dataset is slow
     print(f"\nLoading Dataset...")
-    # dataset = env.get_dataset(rng=(0,2))
     dataset = env.get_dataset()
+    # dataset = env.get_dataset(rng=(0,2))
 
     # 3. preprocess
     new_observations = []
@@ -159,15 +161,11 @@ def main():
 
     # 4. save
     print("\nSaving Dataset...")
-    dataset['observations'] = new_observations
-    output_dir = f'output_datasets/{args.output_dataset}/{args.input_dataset}.zarr'
-    os.makedirs(output_dir, exist_ok=True)
-    src_store = zarr.LMDBStore(f'{os.path.expanduser("~")}/.trifinger_rl_datasets/trifinger-cube-lift-real-smooth-expert-v0.zarr')
-    dst_store = zarr.LMDBStore(output_dir)
-    zarr.copy_store(src_store, dst_store, if_exists='replace')
+    dst_dir = f'output_datasets/{args.output_dataset}/{args.input_dataset}.zarr'
+    os.makedirs(f'output_datasets/{args.output_dataset}/', exist_ok=True)
+    dst_store = zarr.LMDBStore(dst_dir, writemap=False)
     root = zarr.open(store=dst_store)
-    root['observations'] = dataset['observations']
-    src_store.close()
+    root['observations'] = new_observations
     dst_store.close()
 
     # test
