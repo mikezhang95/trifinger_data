@@ -94,8 +94,8 @@ def get_obs(observation):
         obs_dict['joint_velocity'] = joint_velocity[[i%3, (i+1)%3, (i+2)%3]]
         obs_dict['joint_torque'] = joint_torque[[i%3, (i+1)%3, (i+2)%3]]
         obs_dict['joint_fingertip_force'] = joint_fingertip_force[[i%3, (i+1)%3, (i+2)%3]]
-        obs_dict['joint_fingertip_position'] = joint_fingertip_position[[i%3, (i+1)%3, (i+2)%3]]
-        obs_dict['joint_fingertip_velocity'] = joint_fingertip_velocity[[i%3, (i+1)%3, (i+2)%3]]
+        obs_dict['joint_fingertip_position'] = np.array([quat_rotate_inverse(quats_symmetry[i], joint_fingertip_position[(i+j)%3]) for j in range(3)])
+        obs_dict['joint_fingertip_velocity'] = np.array([quat_rotate_inverse(quats_symmetry[i], joint_fingertip_velocity[(i+j)%3]) for j in range(3)])
         obs_dict['last_action'] = last_action[[i%3, (i+1)%3, (i+2)%3]]
 
         # 2. change axis
@@ -114,8 +114,7 @@ def get_obs(observation):
         obs_vec = [] 
         for k, v in obs_dict.items():
             obs_vec.append(v.flatten())
-        obs_vec = np.concatenate(obs_vec)
-        obs_all.append(obs_vec)
+        obs_all.append(np.concatenate(obs_vec))
 
     obs_all = np.stack(obs_all, axis=0)
     return obs_all
@@ -158,6 +157,7 @@ def main():
     for obs in tqdm(dataset['observations']):
         new_obs = get_obs(obs)
         new_observations.append(new_obs)
+    new_observations = np.array(new_observations)
 
     # 4. save
     print("\nSaving Dataset...")
@@ -173,7 +173,7 @@ def main():
             args.input_dataset, 
             flatten_obs=True,
             data_dir=f'output_datasets/{args.output_dataset}')
-    new_dataset = new_env.get_dataset(rng=(0,2))
+    new_dataset = new_env.get_dataset(rng=(0,2), clip=False)
     print('Observation Shape', new_dataset['observations'][0].shape)
 
 

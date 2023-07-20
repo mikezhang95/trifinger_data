@@ -36,6 +36,6 @@ new_env = gym.make(
            flatten_obs=True,
            data_dir=f'output_datasets/{args.output_dataset}')
 
-new_dataset = new_env.get_dataset(rng=(0,2))
+new_dataset = new_env.get_dataset(rng=(0,2), clip=False)
 print('Observation Shape', new_dataset['observations'][0].shape)
 ```
