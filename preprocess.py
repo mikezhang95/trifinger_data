@@ -141,10 +141,10 @@ def main():
     args = parser.parse_args()
 
     # 2. create env and load dataset
-    os.makedirs(f'output_datasets/{args.output_dataset}', exist_ok=True)
+    os.makedirs(f'output_datasets/raw/{args.output_dataset}', exist_ok=True)
     env = gym.make(
             args.input_dataset,
-            data_dir=f'output_datasets/{args.output_dataset}',
+            data_dir=f'output_datasets/raw/{args.output_dataset}',
             flatten_obs=False)
     # M: loading all dataset is slow
     print(f"\nLoading Dataset...")
@@ -155,24 +155,32 @@ def main():
     new_observations = []
     print("\nPreprocessing Dataset...")
     for obs in tqdm(dataset['observations']):
-        new_obs = get_obs(obs)
-        new_observations.append(new_obs)
+        try:
+            new_obs = get_obs(obs)
+            new_observations.append(new_obs)
+        except:
+            print(f'\nTransform obs error!\n{obs}\n')
+            pass
     new_observations = np.array(new_observations)
+    print(f'Successfully process {new_observations.shape[0]}/{len(dataset["observations"])}')
 
     # 4. save
     print("\nSaving Dataset...")
-    dst_dir = f'output_datasets/{args.output_dataset}/{args.input_dataset}.zarr'
-    os.makedirs(f'output_datasets/{args.output_dataset}/', exist_ok=True)
+    dst_dir = f'output_datasets/new/{args.output_dataset}/{args.input_dataset}.zarr'
+    os.makedirs(f'output_datasets/new/{args.output_dataset}/', exist_ok=True)
     dst_store = zarr.LMDBStore(dst_dir, writemap=False)
     root = zarr.open(store=dst_store)
     root['observations'] = new_observations
+    root['actions'] = dataset['actions']
+    root['rewards'] = dataset['rewards']
+    root['timeouts'] = dataset['timeouts']
     dst_store.close()
 
     # test
     new_env = gym.make(
             args.input_dataset, 
             flatten_obs=True,
-            data_dir=f'output_datasets/{args.output_dataset}')
+            data_dir=f'output_datasets/new/{args.output_dataset}')
     new_dataset = new_env.get_dataset(rng=(0,2), clip=False)
     print('Observation Shape', new_dataset['observations'][0].shape)
 
