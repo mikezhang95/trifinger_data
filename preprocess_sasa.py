@@ -63,8 +63,9 @@ def transform_keypoints(quat, keypoints):
 
 def get_act(act):
     new_act = []
+    act = act.reshape(3, -1)
     for i in range(3):
-        new_act.append(np.array(act[[i%3, (i+1)%3, (i+2)%3]]))
+        new_act.append(np.concatenate(act[[i%3, (i+1)%3, (i+2)%3]], axis=-1))
     return new_act
 
 
@@ -161,21 +162,16 @@ def main():
     new_observations = []
     new_actions = []
     assert len(dataset['observations']) == len(dataset['actions']) 
-    print("\nPreprocessing Dataset #{len(dataset['observations'])}...")
+    print(f"\nPreprocessing Dataset...")
     for obs, act in tqdm(zip(dataset['observations'], dataset['actions'])):
-        try:
-            new_obs = get_obs(obs)
-            new_observations.extend(new_obs)
-            new_act = get_act(act)
-            new_actions.extend(new_act)
-        except:
-            print(f'\nTransform obs error!\n{obs}\n')
-            pass
+        new_obs = get_obs(obs)
+        new_observations.extend(new_obs)
+        new_act = get_act(act)
+        new_actions.extend(new_act)
+
     new_observations = np.array(new_observations)
     new_actions = np.array(new_actions)
     print(f'Successfully process {new_observations.shape[0]}/{len(dataset["observations"])}')
-    print(new_actions.shape, new_observations.shape)
-    print(new_actions)
 
     # 4. save
     print("\nSaving Dataset...")

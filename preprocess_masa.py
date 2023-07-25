@@ -155,12 +155,9 @@ def main():
     new_observations = []
     print("\nPreprocessing Dataset...")
     for obs in tqdm(dataset['observations']):
-        try:
-            new_obs = get_obs(obs)
-            new_observations.append(new_obs)
-        except:
-            print(f'\nTransform obs error!\n{obs}\n')
-            pass
+        new_obs = get_obs(obs)
+        new_observations.append(new_obs)
+
     new_observations = np.array(new_observations)
     print(f'Successfully process {new_observations.shape[0]}/{len(dataset["observations"])}')
 
