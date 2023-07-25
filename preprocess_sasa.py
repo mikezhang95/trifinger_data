@@ -61,6 +61,12 @@ def transform_keypoints(quat, keypoints):
         new_keypoints.append(new_keypoint)
     return np.stack(new_keypoints, axis=0)
 
+def get_act(act):
+    new_act = []
+    for i in range(3):
+        new_act.append(np.array(act[[i%3, (i+1)%3, (i+2)%3]]))
+    return new_act
+
 
 def get_obs(observation):
 
@@ -141,10 +147,10 @@ def main():
     args = parser.parse_args()
 
     # 2. create env and load dataset
-    os.makedirs(f'output_datasets/raw/{args.output_dataset}', exist_ok=True)
+    os.makedirs(f'output_datasets/raw/', exist_ok=True)
     env = gym.make(
             args.input_dataset,
-            data_dir=f'output_datasets/raw/{args.output_dataset}',
+            data_dir=f'output_datasets/raw/',
             flatten_obs=False)
     # M: loading all dataset is slow
     print(f"\nLoading Dataset...")
@@ -153,25 +159,32 @@ def main():
 
     # 3. preprocess
     new_observations = []
-    print("\nPreprocessing Dataset...")
-    for obs in tqdm(dataset['observations']):
+    new_actions = []
+    assert len(dataset['observations']) == len(dataset['actions']) 
+    print("\nPreprocessing Dataset #{len(dataset['observations'])}...")
+    for obs, act in tqdm(zip(dataset['observations'], dataset['actions'])):
         try:
             new_obs = get_obs(obs)
-            new_observations.append(new_obs)
+            new_observations.extend(new_obs)
+            new_act = get_act(act)
+            new_actions.extend(new_act)
         except:
             print(f'\nTransform obs error!\n{obs}\n')
             pass
     new_observations = np.array(new_observations)
+    new_actions = np.array(new_actions)
     print(f'Successfully process {new_observations.shape[0]}/{len(dataset["observations"])}')
+    print(new_actions.shape, new_observations.shape)
+    print(new_actions)
 
     # 4. save
     print("\nSaving Dataset...")
-    dst_dir = f'output_datasets/new/{args.output_dataset}/{args.input_dataset}.zarr'
-    os.makedirs(f'output_datasets/new/{args.output_dataset}/', exist_ok=True)
+    dst_dir = f'output_datasets/sasa/{args.output_dataset}/{args.input_dataset}.zarr'
+    os.makedirs(f'output_datasets/sasa/{args.output_dataset}/', exist_ok=True)
     dst_store = zarr.LMDBStore(dst_dir, writemap=False)
     root = zarr.open(store=dst_store)
     root['observations'] = new_observations
-    root['actions'] = dataset['actions']
+    root['actions'] = new_actions
     root['rewards'] = dataset['rewards']
     root['timeouts'] = dataset['timeouts']
     dst_store.close()
@@ -180,9 +193,10 @@ def main():
     new_env = gym.make(
             args.input_dataset, 
             flatten_obs=True,
-            data_dir=f'output_datasets/new/{args.output_dataset}')
-    new_dataset = new_env.get_dataset(rng=(0,2), clip=False)
-    print('Observation Shape', new_dataset['observations'][0].shape)
+            data_dir=f'output_datasets/sasa/{args.output_dataset}')
+    new_dataset = new_env.get_dataset(rng=(0,6), clip=False)
+    print('Observation Shape', new_dataset['observations'].shape)
+    print('Action Shape', new_dataset['actions'].shape)
 
 
 if __name__ == "__main__":
