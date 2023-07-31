@@ -181,8 +181,8 @@ def main():
     root = zarr.open(store=dst_store)
     root['observations'] = new_observations
     root['actions'] = new_actions
-    root['rewards'] = dataset['rewards']
-    root['timeouts'] = dataset['timeouts']
+    root['rewards'] = dataset['rewards'].repeat(3)
+    root['timeouts'] = dataset['timeouts'].repeat(3)
     dst_store.close()
 
     # test
